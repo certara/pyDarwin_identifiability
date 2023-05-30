@@ -2,6 +2,7 @@ import sys
 import json
 import math
 import collections
+import re
 from darwin.Log import log
 from darwin.options import options
 
@@ -64,7 +65,18 @@ class Template:
         self.omega_band_pos = None
 
         self.template_text = options.apply_aliases(self.template_text)
-
+        if options.penalty['use_identifiability']:
+            self._check_saddle_point_reset()
+    def _check_saddle_point_reset(self):
+        # read template
+        text = self.template_text.split("$")
+        found = False
+        for line in text:
+            if re.search("SADDLE_RESET.*=.*1", line) != None:
+                return True
+        if not found:
+            log.error("Identifiability requested, but SADDLE_RESET not used in Estimation")
+            sys.exit()
     def _get_gene_length(self):
         """ argument is the token sets, returns maximum value of token sets and number of bits"""
 
