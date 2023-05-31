@@ -335,8 +335,28 @@ class ModelRun:
         if not self.result.messages:
             self.result.messages = 'No important warnings'
 
-        if self._post_run_r() and self._post_run_python() and self._calc_fitness():
+        if self._post_run_r() and self._post_run_python() and self._check_identifiable() and self._calc_fitness():
             self.status = "Done"
+
+    def _calc_identifiability(self):
+
+        self.result.identifiability_ok = False
+        self.result.identifiability_worst_parm = 9
+        self.result.identifiability_diff = 0.5
+    def _check_identifiable(self):
+        if not options.penalty['use_identifiability']:
+            self.result.identifiability_penalty = 0
+            self.result.identifiability_ok = True
+            self.result.identifiability_worst_parm = None
+            self.result.identifiability_diff = None
+            self.result.identifiability_worst_parm = None
+            return True
+        else:
+            self._calc_identifiability()
+            with open(os.path.join(self.run_dir, self.output_file_name), "a") as f:
+                f.write(f"Identifiability worst parm = {self.result.identifiability_worst_parm}\n")
+                f.write(f"Identifiability worst difference = {self.result.identifiability_diff}\n")
+            return True
 
     def cleanup(self):
         """

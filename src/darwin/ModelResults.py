@@ -11,6 +11,7 @@ JSON_ATTRIBUTES = [
 
 class ModelResults:
     def __init__(self):
+        self.identifiability_ok = None
         self.fitness = options.crash_value
 
         self.ofv = options.crash_value
@@ -19,7 +20,11 @@ class ModelResults:
         self.success = self.covariance = self.correlation = False
 
         self.post_run_r_text = self.post_run_python_text = ""
-        self.post_run_python_penalty = self.post_run_r_penalty = 0
+        self.post_run_python_penalty = self.post_run_r_penalty = self.identifiability_penalty = 0
+        self.identifiability_ok = True
+        self.identifiability_worst_parm = None
+        self.identifiability_diff = None
+        self.identifiability_worst_parm = None
 
         self.messages = self.errors = ""
 
@@ -48,6 +53,9 @@ class ModelResults:
 
         # non influential tokens penalties
         fitness += model.non_influential_token_num * penalties['non_influential_tokens']
+
+        if not self.identifiability_ok:
+            fitness += penalties['identifiability_penalty']
 
         if not self.success:
             fitness += penalties['convergence']
