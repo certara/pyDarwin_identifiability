@@ -48,6 +48,6 @@
   $SIGMA   
 
   {RESERR[2]}   ;; additive or proportional or combined
-  $EST METHOD=COND INTER MAX = 9999 MSFO=MSF1 
+  $EST METHOD=COND INTER SADDLE_RESET=1 MAX = 9999 MSFO=MSF1 
   $COV UNCOND PRINT=E
  

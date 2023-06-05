@@ -1,14 +1,19 @@
+import re
 import sys
 import os
 from os.path import isfile
-
+from pathlib import Path
 import json
 import shlex
+
+import numpy as np
+import xmltodict
 
 import subprocess
 from subprocess import DEVNULL, STDOUT, TimeoutExpired, Popen
 import threading
 import traceback
+from typing import Match
 
 from darwin.Log import log
 from darwin.options import options
@@ -339,10 +344,74 @@ class ModelRun:
             self.status = "Done"
 
     def _calc_identifiability(self):
+        # open output file
+        try:
+            where = None
+            output = Path(os.path.join(self.run_dir, self.output_file_name)).read_text()
+            where = re.search("0SADDLE POINT RESET", output)
+            if where is None:
+                self.result.identifiability_ok = False
+                self.result.identifiability_worst_parm = -999
+                self.result.identifiability_diff = -999
+            else:
+                output = output[:where.regs[0][0]]
+                where = output.rfind("0ITERATION NO.:")
+                output = output[where:].splitlines()
+                pre_iteration = int(output[0][16:24])
+                extfile = Path(os.path.join(self.run_dir, (self.file_stem + ".ext"))).read_text()
+                extfile = extfile.splitlines()
+                pre_parms = None
+                for i in range(2, len(extfile)):
+                    line = extfile[i]
+                    if int(line[:14]) == pre_iteration:
+                        # pre_parms = line[15:].split()
+                        # last value if OFV
+                        pre_parms = line.split()[1:-1]
+                        break
+                if pre_parms is None:
+                    self.result.identifiability_ok = False
+                    self.result.identifiability_worst_parm = -999
+                    self.result.identifiability_diff = -999
+                else:
+                    # get final from xml, note that sequence in ext is THETA, SIGMA, OMEGA
+                    res_file = os.path.join(self.run_dir, self.file_stem + ".xml")
+                    # res_file = "c:\\Users\\msale\\pydarwin\\Example1\\temp\\0\\02\\NM_0_02.xml"
+                    with open(res_file) as xml_file:
+                        data_dict = xmltodict.parse(xml_file.read(), force_list=True) #{'nm:col', 'nm:row'}) everyting is a list
+                    theta = data_dict['nm:output'][0]['nm:nonmem'][0]['nm:problem'][0]['nm:estimation'][0]['nm:theta'][0]['nm:val']
+                    sigma = data_dict['nm:output'][0]['nm:nonmem'][0]['nm:problem'][0]['nm:estimation'][0]['nm:sigma'][0]['nm:row']
+                    omega = data_dict['nm:output'][0]['nm:nonmem'][0]['nm:problem'][0]['nm:estimation'][0]['nm:omega'][0]['nm:row']
+                    ntheta = len(theta)
+                    nsigma_rows = len(sigma)
+                    nomega_rows = len(omega)
+                    post_parms = list()
+                    for this_theta in range(ntheta):
+                        post_theta = float(theta[this_theta]['#text'][0])
+                        post_parms.append(post_theta)
+                    for this_row in range(nsigma_rows):
+                        row = sigma[this_row]['nm:col']
+                        for this_col in range(this_row + 1):
+                            post_sigma = float(row[this_col]['#text'][0])
+                            post_parms.append(post_sigma)
+                    for this_row in range(nomega_rows):
+                        row = omega[this_row]['nm:col']
+                        for this_col in range(this_row + 1):
+                            post_omega = float(row[this_col]['#text'][0])
+                            post_parms.append(post_omega)
+                    diff = [np.abs((post - float(pre))/post) if post != 0 else 0 for post, pre in zip(post_parms, pre_parms)]
+                    max_diff = np.max(diff)
+                    worst_parm = np.array(diff).argmax()
+                    if max_diff > options.penalty['identifiability_delta']:
+                        self.result.identifiability_ok = False
+                    else:
+                        self.result.identifiability_ok = True
 
-        self.result.identifiability_ok = False
-        self.result.identifiability_worst_parm = 9
-        self.result.identifiability_diff = 0.5
+                    self.result.identifiability_worst_parm = worst_parm
+                    self.result.identifiability_diff = max_diff
+        except:
+            self.result.identifiability_ok = False
+            self.result.identifiability_worst_parm = -999
+            self.result.identifiability_diff = -999
     def _check_identifiable(self):
         if not options.penalty['use_identifiability']:
             self.result.identifiability_penalty = 0

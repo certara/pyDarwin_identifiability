@@ -6,12 +6,11 @@ $SUBROUTINE ADVAN2
 $ABBR DERIV2=NO
 $PK      
   CWTKG = WTKG/70  ;; CENTERED ON ONE 
-  CAGE = AGE/40
-;; thetas out of sequence
-  TVV2=THETA(2){V2~WT[1]} {V2~GENDER[1]}
-  V2=TVV2*EXP(ETA(2)) 
+  CAGE = AGE/40 
   TVCL= THETA(1) {CL~WT[1]}  
   CL=TVCL*EXP(ETA(1)) 
+  TVV2=THETA(2){V2~WT[1]} {V2~GENDER[1]}
+  V2=TVV2*EXP(ETA(2))  
   K=CL/V2  
   TVKA=THETA(3) 
   KA=TVKA  {KAETA[1]}  
@@ -33,8 +32,8 @@ $THETA  ;; must be one THETA per line.
  {ALAG[2]}
  
 $OMEGA   ;; must be one ETA/line
-  0.2  		; ETA(1) CLEARANCE
-;; test for comments in blocks
+  0.2  		; ETA(1) CLEARANCE 
+$OMEGA
   0.2  	; ETA(2) VOLUME
 ;; optional $OMEGA blocks
 {KAETA[2]}   
@@ -42,6 +41,6 @@ $OMEGA   ;; must be one ETA/line
 $SIGMA   
 
 {RESERR[2]} 
-$EST METHOD=COND INTER MAX = 9999 SADDLE_RESET = 1 MSFO=MSF1
+$EST METHOD=COND INTER MAX = 9999 PRINT= 2 SADDLE_RESET = 1 MSFO=MSF1
 $COV UNCOND PRINT=E
  

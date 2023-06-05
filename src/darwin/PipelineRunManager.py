@@ -95,7 +95,8 @@ class PipelineRunManager(ModelRunManager):
                               f"{run.run_dir},{res.fitness:.6f},{''.join(map(str, model.model_code.IntCode))},"
                               f"{res.ofv},{res.success},{res.covariance},{res.correlation},{model.theta_num},"
                               f"{model.omega_num},{model.sigma_num},{res.condition_num},{res.post_run_r_penalty},"
-                              f"{res.post_run_python_penalty},{res.messages}\n")
+                              f"{res.post_run_python_penalty},{res.post_run_python_penalty},{res.identifiability_ok},"
+                              f"{res.identifiability_worst_parm},{res.identifiability_diff},{res.messages}\n")
 
         fitness_crashed = res.fitness == options.crash_value
         fitness_text = f"{res.fitness:.0f}" if fitness_crashed else f"{res.fitness:.3f}"

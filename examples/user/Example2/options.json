@@ -1,11 +1,11 @@
 {
     "author": "Certara",
-    "algorithm": "GP",
+    "algorithm": "GA",
     "num_opt_chains": 2,
 
     "random_seed": 11,
-    "population_size": 10,
-    "num_parallel": 4,
+    "population_size": 16,
+    "num_parallel": 16,
     "num_generations": 7,
 
     "downhill_period": 5,
@@ -24,7 +24,10 @@
         "covariance": 100,
         "correlation": 100,
         "condition_number": 100,
-        "non_influential_tokens": 0.00001
+        "non_influential_tokens": 0.00001,
+        "use_identifiability": true,
+        "identifiability_delta": 0.1,
+        "identifiability_penalty": 100
     },
 
     "remove_run_dir": false,

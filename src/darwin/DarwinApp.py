@@ -46,7 +46,8 @@ def _init_model_results():
 
     with open(results_file, "w") as resultsfile:
         resultsfile.write(f"Iteration,Model number,Run Directory,Fitness,Model,ofv,success,covar,correlation #,"
-                          f"ntheta,nomega,nsigm,condition,RPenalty,PythonPenalty,NMTran messages\n")
+                          f"ntheta,nomega,nsigm,condition,RPenalty,PythonPenalty,Identifiability_OK,"
+                          f"Identifiability_worst,Identifiability_max_delta,NMTran messages\n")
 
     GlobalVars.results_file = results_file
 
